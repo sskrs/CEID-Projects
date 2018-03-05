@@ -1,11 +1,8 @@
 #!/bin/bash
 
-#SOTIRIS SOUKARAS
-#AM 236205
-
 #to $# metraei tn arithmo twn arguments p dinontai apo t xrhsth 
 if [ $# -eq 0 ]; then
-    echo "6205"
+    echo "Arithmos mhtrwou"
 fi
 
 #dhlwsh olwn twn arguments pou mporei n dwthoun
