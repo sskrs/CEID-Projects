@@ -3,7 +3,6 @@ Codes used for projects at CEID
 
 Project  | Language, libraries etc
 ------------- |  ------------
-[Digital Communications][]  | C, Python, Flex, Bison
-[Software Engineering][] | C, TCP/IP
-[Operating Systems][] | C, semaphores, processes
-
+[Digital Communications][https://github.com/sskrs/CEID_LIFE/tree/master/Digital%20Communications]  | MATLAB
+[Software Engineering][https://github.com/sskrs/CEID_LIFE/tree/master/SoftEngProject19-master] |  Java, Latex
+[Operating Systems][https://github.com/sskrs/CEID_LIFE/tree/master/OS] | C, Shell
