@@ -1,7 +1,7 @@
 # CEID_LIFE
 Codes used for projects at CEID
 
-Project  | Language, libraries etc
+Project  | Language
 ------------- |  ------------
 [Digital Communications](https://github.com/sskrs/CEID_LIFE/tree/master/Digital%20Communications)  | MATLAB
 [Software Engineering](https://github.com/sskrs/CEID_LIFE/tree/master/SoftEngProject19-master) |  Java, Latex
