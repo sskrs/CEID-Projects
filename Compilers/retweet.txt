@@ -1,0 +1,10 @@
+{
+"created_at":"Thu Jun 06 23:12:21 +0000 2017",
+"id_str": "",
+"retweeted_status":{
+"text": "",
+"user": {
+ "screen_name":"TwitterDev",
+ }
+ }
+}

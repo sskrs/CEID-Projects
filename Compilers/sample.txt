@@ -1,0 +1,13 @@
+{
+"created_at":"Thu Jun 06 23:12:21 +0000 2017",
+"id_str": "",
+"text": "",
+"user": {
+ "id": 51110213123123,
+ "name": "Twitter Dev",
+ "screen_name":"TwitterDev",
+ "location":"Internet",
+ "url":"",
+ "description":""
+ }
+}
