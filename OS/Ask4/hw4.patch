@@ -1,0 +1,328 @@
+diff --git a/commands/Makefile b/commands/Makefile
+index 40be52a..31c73b0 100644
+--- a/commands/Makefile
++++ b/commands/Makefile
+@@ -8,7 +8,7 @@ SUBDIR=	add_route arp ash at backup banner basename btrace cal \
+ 	comm compress cp crc cron crontab cut \
+ 	dd decomp16 DESCRIBE devmand devsize df dhcpd \
+ 	dhrystone diff dirname diskctl dumpcore \
+-	eject env expand factor fbdctl \
++	eject env erwtima3 expand factor fbdctl \
+ 	find finger fingerd fix fold format fortune fsck.mfs \
+ 	ftp101 gcore gcov-pull getty grep head hexdump host \
+ 	hostaddr id ifconfig ifdef \
+diff --git a/commands/erwtima3/Makefile b/commands/erwtima3/Makefile
+new file mode 100644
+index 0000000..6fa8447
+--- /dev/null
++++ b/commands/erwtima3/Makefile
+@@ -0,0 +1,4 @@
++PROG= erwtima3
++MAN=
++
++.include <bsd.prog.mk>
+diff --git a/commands/erwtima3/erwtima3.c b/commands/erwtima3/erwtima3.c
+new file mode 100644
+index 0000000..755456e
+--- /dev/null
++++ b/commands/erwtima3/erwtima3.c
+@@ -0,0 +1,41 @@
++#include <sys/cdefs.h>
++#ifndef lint
++#endif
++#ifndef lint
++#if 0
++static char sccsid[]= "@(#)erwtima3.c;
++#else
++__RCSID("");
++#endif
++#endif
++#include <sys/param.h>
++#include <sys/stat.h>
++#include <sys/types.h>
++#include <err.h>
++#include <errno.h>
++#include <locale.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <unistd.h>
++
++void usage(void);
++int main(int, char *[]);
++
++int main(int argc, char *argv[])
++{
++	if(argc==1)
++	{
++		erwtima3();
++		}
++	else
++		usage();
++		return 0;
++	}
++
++void usage (void)
++{
++	(void)fprintf(stderr, "usage: %s [NoArgument] \n", getprogname());
++        exit(0);
++}
++
+diff --git a/include/minix/callnr.h b/include/minix/callnr.h
+index 6f145cf..776d81e 100644
+--- a/include/minix/callnr.h
++++ b/include/minix/callnr.h
+@@ -65,6 +65,7 @@
+ #define SETGROUPS_O	  66
+ #define GETMCONTEXT       67
+ #define SETMCONTEXT       68
++#define ERWTIMA3	  69
+ 
+ /* Posix signal handling. */
+ #define SIGACTION	  71
+diff --git a/include/unistd.h b/include/unistd.h
+index 55a146b..11287de 100644
+--- a/include/unistd.h
++++ b/include/unistd.h
+@@ -436,9 +436,12 @@ extern const char *const *sys_siglist __RENAME(__sys_siglist14);
+ extern	 int optreset;		/* getopt(3) external variable */
+ extern	 char *suboptarg;	/* getsubopt(3) external variable */
+ #endif
++int     erwtima3(void);
++
+ 
+ __END_DECLS
+ 
++
+ #ifdef __minix
+ /* Minix expects RBT_* flags to be included with <unistd.h> */
+ #include <sys/reboot.h>
+diff --git a/kernel/system/do_fork.c b/kernel/system/do_fork.c
+index f309270..4a0800b 100644
+--- a/kernel/system/do_fork.c
++++ b/kernel/system/do_fork.c
+@@ -122,7 +122,7 @@ int do_fork(struct proc * caller, message * m_ptr)
+   rpc->p_seg.p_ttbr = 0;
+   rpc->p_seg.p_ttbr_v = NULL;
+ #endif
+-
++printf("process forked\n");
+   return OK;
+ }
+ 
+diff --git a/lib/libc/sys-minix/Makefile.inc b/lib/libc/sys-minix/Makefile.inc
+index 6f52097..9ad7e0b 100644
+--- a/lib/libc/sys-minix/Makefile.inc
++++ b/lib/libc/sys-minix/Makefile.inc
+@@ -2,7 +2,7 @@
+ 
+ SRCS+= 	accept.c access.c bind.c brk.c sbrk.c m_closefrom.c getsid.c \
+ 	chdir.c chmod.c fchmod.c chown.c fchown.c chroot.c close.c \
+-	connect.c dup.c dup2.c execve.c fcntl.c flock.c fpathconf.c fork.c \
++	connect.c dup.c dup2.c erwtima3.c execve.c fcntl.c flock.c fpathconf.c fork.c \
+ 	fstatfs.c fstatvfs.c fsync.c ftruncate.c getdents.c getegid.c getgid.c \
+ 	getgroups.c getitimer.c setitimer.c __getlogin.c getpeername.c \
+ 	getpgrp.c getpid.c getppid.c priority.c getrlimit.c getsockname.c \
+@@ -16,7 +16,7 @@ SRCS+= 	accept.c access.c bind.c brk.c sbrk.c m_closefrom.c getsid.c \
+ 	vectorio.c shutdown.c sigaction.c sigpending.c sigreturn.c sigsuspend.c\
+ 	sigprocmask.c socket.c socketpair.c stat.c statvfs.c symlink.c \
+ 	sync.c syscall.c sysuname.c truncate.c umask.c unlink.c write.c \
+-	_exit.c _ucontext.c environ.c __getcwd.c vfork.c sizeup.c init.c
++	_exit.c _ucontext.c environ.c __getcwd.c vfork.c sizeup.c init.c 
+ 
+ # Minix specific syscalls.
+ SRCS+= cprofile.c lseek64.c sprofile.c _mcontext.c
+diff --git a/lib/libc/sys-minix/erwtima3.c b/lib/libc/sys-minix/erwtima3.c
+new file mode 100644
+index 0000000..d372e79
+--- /dev/null
++++ b/lib/libc/sys-minix/erwtima3.c
+@@ -0,0 +1,16 @@
++#include <lib.h>
++#include <sys/stat.h>
++#include <unistd.h>
++#include "namespace.h"
++#include <sys/cdefs.h>
++#include <string.h>
++
++
++int erwtima3() {
++	message m;
++
++
++	return _syscall(PM_PROC_NR, ERWTIMA3, &m);
++
++	}
++
+diff --git a/lib/libsys/sys_fork.c b/lib/libsys/sys_fork.c
+index 811e230..e8d8aed 100644
+--- a/lib/libsys/sys_fork.c
++++ b/lib/libsys/sys_fork.c
+@@ -18,5 +18,8 @@ vir_bytes *msgaddr;
+   r = _kernel_call(SYS_FORK, &m);
+   *child_endpoint = m.PR_ENDPT;
+   *msgaddr = (vir_bytes) m.PR_FORK_MSGADDR;
+-  return r;
++
++ return r;
+ }
++
++
+diff --git a/servers/pm/Makefile b/servers/pm/Makefile
+index 9065432..caca24e 100644
+--- a/servers/pm/Makefile
++++ b/servers/pm/Makefile
+@@ -3,8 +3,8 @@
+ # Makefile for Process Manager (PM)
+ PROG=	pm
+ SRCS=	main.c forkexit.c break.c exec.c time.c alarm.c \
+-	signal.c utility.c table.c getset.c misc.c \
+-	profile.c schedule.c
++	signal.c utility.c table.c syerwtima3.c getset.c misc.c \
++	profile.c schedule.c 
+ 
+ .if ${USE_MCONTEXT} != "no"
+ SRCS+= mcontext.c
+diff --git a/servers/pm/misc.c b/servers/pm/misc.c
+index dbe979f..82cd157 100644
+--- a/servers/pm/misc.c
++++ b/servers/pm/misc.c
+@@ -495,3 +495,43 @@ char *brk_addr;
+ 	_brksize = brk_addr;
+ 	return 0;
+ }
++/*
++--------------------------------------------------------------------------------           			do_erwtima3
++
++==============================================================================
++*/
++
++int syerwtima3() {
++	int i, counter=0;
++	clock_t clock_usr=0;
++	clock_t clock_sys=0;
++
++	for (i=0;i<NR_PROCS;i++)
++	{
++		if (mproc[i].mp_flags % 11)
++		{
++			counter++;
++			clock_usr+=mproc[i].mp_child_utime;
++			clock_sys+=mproc[i].mp_child_stime;
++		}
++	
++	}
++	printf("processes -> %d\n", counter);
++	printf("user time -> %d\n", clock_usr);
++	printf("system time -> %d\n", clock_sys);
++
++return 0;
++} 
++
++
++
++
++
++
++
++
++
++
++
++
++
+diff --git a/servers/pm/proto.h b/servers/pm/proto.h
+index 00646d3..6a507a7 100644
+--- a/servers/pm/proto.h
++++ b/servers/pm/proto.h
+@@ -56,6 +56,7 @@ int do_getepinfo(void);
+ int do_getepinfo_o(void);
+ int do_svrctl(void);
+ int do_getsetpriority(void);
++int do_erwtima3(void);
+ 
+ /* schedule.c */
+ void sched_init(void);
+diff --git a/servers/pm/syerwtima3.c b/servers/pm/syerwtima3.c
+new file mode 100755
+index 0000000..abb0d83
+--- /dev/null
++++ b/servers/pm/syerwtima3.c
+@@ -0,0 +1,29 @@
++#include <stdio.h>
++#include "pm.h"
++#include "mproc.h"
++#include <unistd.h>
++#include <string.h>
++
++int do_erwtima3() {
++
++	int i, counter=0;
++	clock_t clock_usr=0;
++	clock_t clock_sys=0;
++
++	for (i=0;i<NR_PROCS;i++)
++	{
++		if(mproc[i].mp_flags % 11)
++		{
++			counter++;
++			clock_usr+=mproc[i].mp_child_utime;
++			clock_sys+=mproc[i].mp_child_stime;
++		}
++
++
++}
++	printf("processes -> %d\n", counter);
++	printf("user time -> %d\n", clock_usr);
++	printf("system time -> %d\n", clock_sys);
++
++	return 0;
++}
+diff --git a/servers/pm/table.c b/servers/pm/table.c
+index 5051cec..58162f4 100644
+--- a/servers/pm/table.c
++++ b/servers/pm/table.c
+@@ -80,7 +80,7 @@ int (*call_vec[])(void) = {
+ 	do_set, 	/* 66 = setgroups */
+ 	do_getmcontext,	/* 67 = getmcontext */
+ 	do_setmcontext,	/* 68 = setmcontext */
+-	no_sys,		/* 69 = unused	*/
++	do_erwtima3,	/* 69 = erwtima3 */
+ 	no_sys,		/* 70 = unused	*/
+ 	do_sigaction,	/* 71 = sigaction   */
+ 	do_sigsuspend,	/* 72 = sigsuspend  */
+diff --git a/servers/vfs/open.c b/servers/vfs/open.c
+index fc72695..20c82b9 100644
+--- a/servers/vfs/open.c
++++ b/servers/vfs/open.c
+@@ -329,7 +329,7 @@ static struct vnode *new_node(struct lookup *resolve, int oflags, mode_t bits)
+   path = resolve->l_path;	/* For easy access */
+ 
+   lookup_init(&findnode, path, resolve->l_flags, &dir_vmp, &dirp);
+-  findnode.l_vmnt_lock = VMNT_WRITE;
++ findnode.l_vmnt_lock = VMNT_WRITE;
+   findnode.l_vnode_lock = VNODE_WRITE; /* dir node */
+ 
+   /* When O_CREAT and O_EXCL flags are set, the path may not be named by a
+@@ -608,6 +608,9 @@ int do_mkdir()
+ 	r = req_mkdir(vp->v_fs_e, vp->v_inode_nr, fullpath, fp->fp_effuid,
+ 		      fp->fp_effgid, bits);
+   }
++ printf("newdir: %s %o\n", fullpath, dirmode);
++
++
+ 
+   unlock_vnode(vp);
+   unlock_vmnt(vmp);
+diff --git a/sys/sys/stat.h b/sys/sys/stat.h
+index 06a5a34..4aea02d 100644
+--- a/sys/sys/stat.h
++++ b/sys/sys/stat.h
+@@ -228,6 +228,7 @@ int	chmod(const char *, mode_t);
+ int	mkdir(const char *, mode_t);
+ int	mkfifo(const char *, mode_t);
+ #ifndef __LIBC12_SOURCE__
++int     erwtima3(void);
+ int	stat(const char *, struct stat *) __RENAME(__stat50);
+ int	fstat(int, struct stat *) __RENAME(__fstat50);
+ #endif
