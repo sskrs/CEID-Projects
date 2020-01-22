@@ -1,0 +1,194 @@
+diff --git a/include/minix/callnr.h b/include/minix/callnr.h
+index 6f145cf..2c8b8c1 100644
+--- a/include/minix/callnr.h
++++ b/include/minix/callnr.h
+@@ -65,6 +65,7 @@
+ #define SETGROUPS_O	  66
+ #define GETMCONTEXT       67
+ #define SETMCONTEXT       68
++#define MYCALL 		  69
+ 
+ /* Posix signal handling. */
+ #define SIGACTION	  71
+diff --git a/include/mycall.h b/include/mycall.h
+new file mode 100644
+index 0000000..fd8cd77
+--- /dev/null
++++ b/include/mycall.h
+@@ -0,0 +1,9 @@
++#include <lib.h>
++#include <unistd.h>
++#include <stdio.h>
++
++int mycall()
++{
++	message m;
++	return (_syscall(VFS_PROC_NR, MYCALL, &m));
++}
+diff --git a/include/unistd.h b/include/unistd.h
+index 55a146b..675fd65 100644
+--- a/include/unistd.h
++++ b/include/unistd.h
+@@ -436,7 +436,7 @@ extern const char *const *sys_siglist __RENAME(__sys_siglist14);
+ extern	 int optreset;		/* getopt(3) external variable */
+ extern	 char *suboptarg;	/* getsubopt(3) external variable */
+ #endif
+-
++void mycall(char* var);
+ __END_DECLS
+ 
+ #ifdef __minix
+diff --git a/lib/libc/sys-minix/Makefile.inc b/lib/libc/sys-minix/Makefile.inc
+index 6f52097..6a48c02 100644
+--- a/lib/libc/sys-minix/Makefile.inc
++++ b/lib/libc/sys-minix/Makefile.inc
+@@ -8,7 +8,7 @@ SRCS+= 	accept.c access.c bind.c brk.c sbrk.c m_closefrom.c getsid.c \
+ 	getpgrp.c getpid.c getppid.c priority.c getrlimit.c getsockname.c \
+ 	getsockopt.c setsockopt.c gettimeofday.c geteuid.c getuid.c \
+ 	ioctl.c issetugid.c kill.c link.c listen.c loadname.c lseek.c \
+-	minix_rs.c mkdir.c mkfifo.c mknod.c mmap.c mount.c nanosleep.c \
++	minix_rs.c mkdir.c  mkfifo.c mknod.c mmap.c mount.c nanosleep.c \
+ 	open.c pathconf.c pipe.c poll.c pread.c ptrace.c pwrite.c \
+ 	read.c readlink.c reboot.c recvfrom.c recvmsg.c rename.c\
+ 	rmdir.c select.c sem.c sendmsg.c sendto.c setgroups.c setsid.c \
+diff --git a/servers/vfs/Makefile b/servers/vfs/Makefile
+index b3a2031..11d1500 100644
+--- a/servers/vfs/Makefile
++++ b/servers/vfs/Makefile
+@@ -4,7 +4,7 @@
+ PROG=	vfs
+ SRCS=	main.c open.c read.c write.c pipe.c dmap.c \
+ 	path.c device.c mount.c link.c exec.c \
+-	filedes.c stadir.c protect.c time.c \
++	filedes.c stadir.c mycall.c protect.c time.c \
+ 	lock.c misc.c utility.c select.c table.c \
+ 	vnode.c vmnt.c request.c \
+ 	tll.c comm.c worker.c coredump.c
+diff --git a/servers/vfs/misc.c b/servers/vfs/misc.c
+index 03de68c..550fac0 100644
+--- a/servers/vfs/misc.c
++++ b/servers/vfs/misc.c
+@@ -39,6 +39,8 @@
+ #include "vnode.h"
+ #include "vmnt.h"
+ #include "param.h"
++#include "timers.h"
++
+ 
+ #define CORE_NAME	"core"
+ #define CORE_MODE	0777	/* mode to use on core image files */
+@@ -800,3 +802,4 @@ ds_event(void *arg)
+   thread_cleanup(NULL);
+   return(NULL);
+ }
++
+diff --git a/servers/vfs/mycall.c b/servers/vfs/mycall.c
+new file mode 100644
+index 0000000..2022da6
+--- /dev/null
++++ b/servers/vfs/mycall.c
+@@ -0,0 +1,79 @@
++#include <sys/statfs.h>
++#include <sys/stat.h>
++
++
++#include "fs.h"
++#include "param.h"
++#include "vmnt.h"
++#include <string.h> 
++#include "fproc.h"
++#include <minix/com.h>
++#include "path.h"
++#include "vmnt.h"
++#include <minix/u64.h>
++#include "file.h"
++#include <minix/callnr.h>
++#include <minix/vfsif.h>
++#include "threads.h"
++#include <assert.h>
++#include "dmap.h"
++#define __VFS_VNODE_H__
++#include "vnode.h"
++EXTERN struct vnode {
++	endpoint_t v_fs_e;
++	endpoint_t v_mapfs_e;
++	ino_t v_inode_nr;
++	mode_t v_mode;
++	uid_t v_uid;
++	gid_t v_gid;
++	off_t v_size;
++	int v_ref_count;
++	int v_fs_count;
++	int v_mapfs_count;
++	#if 0
++	int v_ref_check;
++	#endif
++	endpoint_t v_bfs_e;
++	dev_t v_dev;
++	struct vmnt *v_vmnt;
++	tll_t v_lock;
++	ino_t v_mapinode_nr;
++}vnode[NR_VNODES];
++#define VNODE_READ TLL_READ
++
++int do_mycall()
++{
++  
++  struct vnode *vp;
++  struct vmnt *vmp;
++  char fullpath[PATH_MAX];
++  struct lookup resolve;
++  
++  vir_bytes vname1, statbuf;
++  size_t vname1_length;
++
++  vname1 = (vir_bytes) job_m_in.name1; 
++  vname1_length = (size_t) job_m_in.name1_length;
++  statbuf = (vir_bytes) job_m_in.m1_p2;
++
++  lookup_init(&resolve, fullpath, PATH_NOFLAGS, &vmp, &vp);
++  resolve.l_vmnt_lock= VMNT_READ;
++  resolve.l_vnode_lock = VNODE_READ;
++
++
++
++
++ if (fetch_name(vname1, vname1_length, fullpath) != OK) printf("inode: -\n"); 
++
++
++ if((vp = eat_path(&resolve, fp)) == NULL) printf("inode: -\n"); 
++
++ else 
++ printf("inode: %d\n", vp->v_inode_nr);
++
++  unlock_vnode(vp);
++  unlock_vmnt(vmp);
++
++  put_vnode(vp);
++return 0;
++}
+diff --git a/servers/vfs/proto.h b/servers/vfs/proto.h
+index b98d742..8a8325c 100644
+--- a/servers/vfs/proto.h
++++ b/servers/vfs/proto.h
+@@ -142,6 +142,7 @@ int do_fsync(void);
+ void pm_reboot(void);
+ int do_svrctl(void);
+ int do_getsysinfo(void);
++int do_mycall();
+ int pm_dumpcore(endpoint_t proc_e, int sig, vir_bytes exe_name);
+ void * ds_event(void *arg);
+ 
+diff --git a/servers/vfs/table.c b/servers/vfs/table.c
+index 8371e34..061d63f 100644
+--- a/servers/vfs/table.c
++++ b/servers/vfs/table.c
+@@ -84,7 +84,7 @@ int (*call_vec[])(void) = {
+ 	do_fstat, 	/* 66 = fstat - badly numbered, being phased out */
+ 	do_lstat,	/* 67 = lstat - badly numbered, being phased out */
+ 	no_sys,		/* 68 = unused	*/
+-	no_sys,		/* 69 = unused  */
++	do_mycall,	/* 69 = mycall  */
+ 	no_sys,		/* 70 = unused  */
+ 	no_sys,		/* 71 = (sigaction) */
+ 	no_sys,		/* 72 = (sigsuspend) */
