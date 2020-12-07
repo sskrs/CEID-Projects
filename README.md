@@ -9,8 +9,8 @@
 # Portfolio
 Codes used for projects at CEID
 
-Project name  | Language, Tools
-------------- |  ------------
+Project name | Description |Language, Tools
+------------- |  ------------ |  ------------
 [Digital Communications](https://github.com/sskrs/CEID_LIFE/tree/master/Digital%20Communications) | MATLAB
 [Software Engineering](https://github.com/sskrs/CEID_LIFE/tree/master/SoftEngProject19-master) |Το έργο αφορά μια εφαρμογή στην ελληνική γλώσσα για desktop, η οποία θα εντάσσεται στη θεματική της αστικής κηπουρικής. |  Java, LaTeX
 [Operating Systems](https://github.com/sskrs/CEID_LIFE/tree/master/OS) | C, Shell
