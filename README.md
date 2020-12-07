@@ -2,11 +2,11 @@
 <br />
 <p align="center">
 
-Computer Engineering & Informatics Department | UoP 
+## Computer Engineering & Informatics Department | UoP 
   
 
 
-# CEID_Portfolio
+# Portfolio
 Codes used for projects at CEID
 
 Project name  | Language, Tools
