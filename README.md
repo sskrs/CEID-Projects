@@ -7,7 +7,7 @@
   
 
 
-
+<h3 align="center"> 
 ## CEID_Portfolio
 Codes used for projects at CEID
 
@@ -19,4 +19,5 @@ Project name  | Language, Tools
 [Compilers](https://github.com/sskrs/CEID-Projects-/tree/master/Compilers)  | YAML, Bison, Flex, C
 [e-Commerce](https://github.com/sskrs/CEID-Projects-/tree/master/e-Commerce) | WordPress, XAMPP
 [Computer Networks](https://github.com/sskrs/CEID-Projects-/tree/master/Computer%20Networks)|C
+</h3>
 </p>
